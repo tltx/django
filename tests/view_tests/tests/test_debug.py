@@ -28,6 +28,7 @@ from ..views import (
     sensitive_kwargs_function_caller, sensitive_method_view, sensitive_view,
 )
 
+PY36 = sys.version_info >= (3, 6)
 
 class CallableSettingWrapperTests(TestCase):
     """ Unittests for CallableSettingWrapper
@@ -409,7 +410,7 @@ class ExceptionReporterTests(TestCase):
             exc_type, exc_value, tb = sys.exc_info()
         reporter = ExceptionReporter(request, exc_type, exc_value, tb)
         html = reporter.get_traceback_html()
-        self.assertIn('<h1>ImportError at /test_view/</h1>', html)
+        self.assertIn('<h1>%sError at /test_view/</h1>' % 'ModuleNotFound' if PY36 else 'Import', html)
 
 
 class PlainTextReportTests(TestCase):

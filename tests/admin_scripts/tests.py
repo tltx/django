@@ -40,6 +40,7 @@ if not os.path.exists(test_dir):
 custom_templates_dir = os.path.join(os.path.dirname(upath(__file__)), 'custom_templates')
 SYSTEM_CHECK_MSG = 'System check identified no issues'
 
+PY36 = sys.version_info >= (3, 6)
 
 class AdminScriptTestCase(unittest.TestCase):
     def write_settings(self, filename, apps=None, is_dir=False, sdict=None, extra=None):
@@ -1090,19 +1091,23 @@ class ManageCheck(AdminScriptTestCase):
     def tearDown(self):
         self.remove_settings('settings.py')
 
+
     def test_nonexistent_app(self):
         """ manage.py check reports an error on a non-existent app in
         INSTALLED_APPS """
 
-        self.write_settings('settings.py',
+        self.write_settings(
+            'settings.py',
             apps=['admin_scriptz.broken_app'],
-            sdict={'USE_I18N': False})
+            sdict={'USE_I18N': False},
+        )
         args = ['check']
         out, err = self.run_manage(args)
         self.assertNoOutput(out)
-        self.assertOutput(err, 'ImportError')
+        self.assertOutput(err, 'ModuleNotFoundError' if PY36 else 'ImportError')
         self.assertOutput(err, 'No module named')
         self.assertOutput(err, 'admin_scriptz')
+
 
     def test_broken_app(self):
         """ manage.py check reports an ImportError if an app's models.py

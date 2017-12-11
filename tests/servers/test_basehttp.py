@@ -2,13 +2,17 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.core.servers.basehttp import WSGIRequestHandler
 from django.test import TestCase
 from django.test.client import RequestFactory
-from django.test.utils import captured_stderr
+from django.test.utils import patch_logger, captured_stderr
+from django.utils import unittest
 from django.utils.six import BytesIO
 
 
 class Stub(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+    def sendall(self, data):
+        self.makefile('wb').write(data)
 
 
 class WSGIRequestHandlerTestCase(TestCase):
@@ -77,7 +81,7 @@ class WSGIRequestHandlerTestCase(TestCase):
         server = Stub(base_environ={}, get_app=lambda: test_app)
 
         # We don't need to check stderr, but we don't want it in test output
-        with captured_stderr():
+        with patch_logger('django.server', 'info'):
             # instantiating a handler runs the request as side effect
             WSGIRequestHandler(request, '192.168.0.2', server)
 

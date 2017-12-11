@@ -5,6 +5,7 @@ import datetime
 import math
 import os
 import re
+import sys
 import tokenize
 import unittest
 
@@ -26,6 +27,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from .models import FoodManager, FoodQuerySet
 
+PY36 = sys.version_info >= (3, 6)
 
 class TestModel1(object):
     def upload_to(self):
@@ -314,7 +316,10 @@ class WriterTests(TestCase):
         # Test a string regex with flag
         validator = RegexValidator(r'^[0-9]+$', flags=re.U)
         string = MigrationWriter.serialize(validator)[0]
-        self.assertEqual(string, "django.core.validators.RegexValidator('^[0-9]+$', flags=32)")
+        if PY36:
+            self.assertEqual(string, "django.core.validators.RegexValidator('^[0-9]+$', flags=re.RegexFlag(32))")
+        else:
+            self.assertEqual(string, "django.core.validators.RegexValidator('^[0-9]+$', flags=32)")
         self.serialize_round_trip(validator)
 
         # Test message and code
